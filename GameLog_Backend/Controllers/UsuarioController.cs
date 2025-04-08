@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using GameLog.Models;
 using GameLog.Services;
-using AutoMapper;
-using GameLog_Backend.Entities;
+using GameLog.DTOs;
 
 namespace GameLog.Controllers
 {
@@ -10,67 +8,52 @@ namespace GameLog.Controllers
     [ApiController]
     public class UsuarioController : ControllerBase
     {
-        private readonly UsuarioService _usuarioService;
-        private readonly IMapper _mapper;
+        private readonly UsuarioService _service;
 
-        public UsuarioController(UsuarioService usuarioService, IMapper mapper)
+        public UsuarioController(UsuarioService service)
         {
-            _usuarioService = usuarioService;
-            _mapper = mapper;
+            _service = service;
         }
 
-        // POST: api/usuario/registrar
         [HttpPost("registrar")]
-        public async Task<ActionResult<Usuario>> Registrar(
-            [FromBody] Usuario usuario,
-            [FromQuery] string senha)
+        public async Task<ActionResult<UsuarioResponseDTO>> Registrar([FromBody] UsuarioRegistroDTO dto)
         {
             try
             {
-                // Usa o AutoMapper para copiar dados se necessário (ex: atualizações futuras)
-                var usuarioRegistro = _mapper.Map<Usuario>(usuario);
-                var usuarioCriado = await _usuarioService.Registrar(usuarioRegistro);
-
-                return CreatedAtAction(nameof(ObterPorId), new { id = usuarioCriado.Id }, usuarioCriado);
+                var usuario = await _service.Registrar(dto);
+                return CreatedAtAction(nameof(ObterPorId), new { id = usuario.Id }, usuario);
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 
-        // POST: api/usuario/login
         [HttpPost("login")]
-        public async Task<ActionResult<Usuario>> Login(
-            [FromQuery] string email,
-            [FromQuery] string senha)
+        public async Task<ActionResult<UsuarioResponseDTO>> Login([FromBody] UsuarioLoginDTO dto)
         {
             try
             {
-                var usuario = await _usuarioService.Login(email, senha);
+                var usuario = await _service.Login(dto);
                 return Ok(usuario);
             }
             catch (Exception ex)
             {
-                return Unauthorized(ex.Message);
+                return Unauthorized(new { message = ex.Message });
             }
         }
 
-        // GET: api/usuario/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<Usuario>> ObterPorId(int id)
+        public async Task<ActionResult<UsuarioResponseDTO>> ObterPorId(int id)
         {
             try
             {
-                var usuario = await _usuarioService.ObterPorId(id);
-                if (usuario == null)
-                    return NotFound("Usuário não encontrado");
-
+                var usuario = await _service.ObterPorId(id);
                 return Ok(usuario);
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return NotFound(new { message = ex.Message });
             }
         }
     }

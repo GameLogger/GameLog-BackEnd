@@ -1,8 +1,6 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
-using GameLog.Models;
+﻿using Microsoft.AspNetCore.Mvc;
 using GameLog.Services;
-using GameLog_Backend.Entities;
+using GameLog.DTOs;
 
 namespace GameLog.Controllers
 {
@@ -10,20 +8,42 @@ namespace GameLog.Controllers
     [ApiController]
     public class AvaliacaoController : ControllerBase
     {
-        private readonly AvaliacaoService _avaliacaoService;
-        private readonly IMapper _mapper;
+        private readonly AvaliacaoService _service;
 
-        public AvaliacaoController(AvaliacaoService avaliacaoService, IMapper mapper)
+        public AvaliacaoController(AvaliacaoService service)
         {
-            _avaliacaoService = avaliacaoService;
-            _mapper = mapper;
+            _service = service;
         }
 
         [HttpPost]
-        public async Task<ActionResult<Avaliacao>> CriarAvaliacao([FromBody] Avaliacao avaliacao)
+        public async Task<ActionResult<AvaliacaoResponseDTO>> Criar(
+            [FromQuery] int usuarioId,
+            [FromBody] AvaliacaoCreateDTO dto)
         {
-            var novaAvaliacao = await _avaliacaoService.CriarAvaliacao(avaliacao);
-            return Ok(novaAvaliacao);
+            try
+            {
+                var avaliacao = await _service.CriarAvaliacao(usuarioId, dto);
+                return CreatedAtAction(nameof(ObterPorId), new { id = avaliacao.Id }, avaliacao);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<AvaliacaoResponseDTO>> ObterPorId(int id)
+        {
+            try
+            {
+                var avaliacao = await _service.ObterAvaliacaoResponse(id);
+                if (avaliacao == null) return NotFound();
+                return Ok(avaliacao);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

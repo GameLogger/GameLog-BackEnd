@@ -1,4 +1,6 @@
 using DotNetEnv;
+using GameLog.Configurations;
+using GameLog.Services;
 using GameLog_Backend.Database;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +19,10 @@ var completeConnectionString = baseConnectionString
     .Replace("{DB_PASSWORD}", Environment.GetEnvironmentVariable("DB_PASSWORD"));
 
 // Add services to the container.
+
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddScoped<UsuarioService>();
+builder.Services.AddScoped<AvaliacaoService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
